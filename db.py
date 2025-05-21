@@ -50,8 +50,8 @@ def get_all_students():
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM student_info")
-        students = cursor.fetchall()
 
+        students = cursor.fetchall()
         cursor.close()
         conn.close()
 
@@ -88,3 +88,100 @@ def delete_student(tg_id=None, phone=None, fio=None):
 
 
 
+def create_super_admins_table():
+    try:
+        conn = connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS super_admins (
+                tg_id BIGINT UNIQUE
+            )
+        ''')
+        conn.commit()
+        return cursor, conn
+    except Exception as e:
+        return None, f"Xato: {e}"  # doimo 2ta qiymat qaytariladi
+
+
+
+def add_super_admin(tg_id):
+    cursor, conn = create_super_admins_table()
+
+    if cursor is None:
+        return conn  # bu yerda `conn`da xatolik matni bo'ladi
+
+    try:
+        cursor.execute("INSERT INTO super_admins (tg_id) VALUES (%s) ON CONFLICT DO NOTHING", (tg_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        return f"Xato: {e}"
+
+
+def get_super_admin():
+    try:
+        conn = connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM super_admins")
+        admins = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return admins
+
+    except Exception as e:
+        return f"Error: {e}"
+
+
+
+# def find_user(tg_id=None, phone=None, fio=None):
+#     try:
+#         # if not (tg_id or phone or fio):
+#         #     return []  # hech qanday parametr berilmagan
+#         conn = connection()
+#         cursor = conn.cursor()
+#         print(tg_id,tg_id,fio)
+#
+#         if tg_id:
+#             cursor.execute("SELECT * FROM student_info WHERE tg_id ILIKE %s", (f"%{tg_id}%",))
+#         elif phone:
+#             cursor.execute("SELECT * FROM student_info WHERE phone ILIKE %s", (f"%{phone}%",))
+#         elif fio:
+#             cursor.execute("SELECT * FROM student_info WHERE fio ILIKE %s", (f"%{fio}%",))
+#
+#         result = cursor.fetchall()
+#         cursor.close()
+#         conn.close()
+#
+#         return result
+#
+#     except Exception as e:
+#         print(f"Xato: {e}")
+#         return []
+
+
+def find_user(tg_id=None, phone=None, fio=None):
+    try:
+        conn = connection()
+        cursor = conn.cursor()
+
+        if tg_id:
+            cursor.execute("SELECT * FROM student_info WHERE CAST(tg_id AS TEXT) ILIKE %s", (f"%{tg_id}%",))
+        elif phone:
+            cursor.execute("SELECT * FROM student_info WHERE phone ILIKE %s", (f"%{phone}%",))
+        elif fio:
+            cursor.execute("SELECT * FROM student_info WHERE fio ILIKE %s", (f"%{fio}%",))
+
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return result
+
+    except Exception as e:
+        print(f"Xato: {e}")
+        return []
