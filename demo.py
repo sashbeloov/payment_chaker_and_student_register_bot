@@ -1,10 +1,10 @@
-﻿from aiogram.filters import Command
+from aiogram.filters import Command
 from aiogram import types, Bot, Dispatcher
 import asyncio
 import time
 from aiogram import types
-from data import language, buttons, data, check, item, back, aboutus, loc, courses,admin,admin_language, students_dict, delete_st, superadmin_back, add_admin
-from db import connection, create_table, save_info, get_all_students, delete_student
+from data import *
+from db import *
 
 
 TOKEN = ""
@@ -14,12 +14,19 @@ dp = Dispatcher()
 
 user_data = {}
 user_data_superuser = {}
-super_users = [921347523,457577100]
+super_users = [921347523]
+
+
+
 
 
 @dp.message()
 async def handel_text(message: types.Message):
     try:
+        total = get_super_admin()
+        for i in total:
+            if i:
+                super_users.append(i[0])
         user_id = message.from_user.id
         if user_id not in super_users:
             if user_id not in user_data or message.text == "/start":
@@ -45,16 +52,25 @@ async def handel_text(message: types.Message):
         else:
             if user_id not in user_data_superuser or message.text == "/start":
                 await start_superuser(message)
+            elif  message.text in superadmin_back:
+                await menu_superuser(message)
+            elif message.text in find_students:
+                await find_student(message)
             elif message.text in add_admin:
                 await add_admins(message)
             elif "delete" in user_data_superuser[user_id]:
                 await del_student_check(message)
-            elif message.text in admin_language or message.text in superadmin_back:
+            elif message.text in admin_language:
                 await menu_superuser(message)
             elif message.text in students_dict:
                 await student_list_superuser(message)
             elif message.text in delete_st:
                 await del_student(message)
+            elif "find_student" in user_data_superuser[user_id]:
+                await one_student(message)
+            elif "admin" in user_data_superuser[user_id]:
+                await add(message)
+
 
     except Exception as e:
         await message.answer(f"Unexpected error! Something went wrong.{e}")
@@ -224,6 +240,8 @@ async def confirm(message: types.Message):
     phone_num = user_data[user_id]["phone"]
     course = user_data[user_id]["course"]
     save_info(user_id,fio,phone_num,course)
+    print(user_id,fio,phone_num,course)
+    print(save_info)
     print(user_data)
 
 
@@ -329,6 +347,10 @@ async def menu_superuser(message: types.Message):
         keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
         await message.answer(f"{lang[0][-1]}", reply_markup=keyboard)
     else:
+        keys = {"delete", "find_student", "admin"}
+        for key in keys:
+            if key in user_data_superuser[user_id]:
+                del user_data_superuser[user_id][key]
         lang = admin[user_data_superuser[user_id]["language"]]  # [[]]
         button = [
             [types.KeyboardButton(text=f"{lang[0][0]}"), types.KeyboardButton(text=f"{lang[0][1]}")],
@@ -342,7 +364,6 @@ async def menu_superuser(message: types.Message):
 
 async def student_list_superuser(message: types.Message):
     user_id = message.from_user.id
-    user_data_superuser[user_id]["state"] = "student_list_superuser"
     lang = admin[user_data_superuser[user_id]["language"]] # [[]]
     students = get_all_students()
 
@@ -401,15 +422,68 @@ async def del_student_check(message: types.Message):
 
 async def add_admins(message: types.Message):
     user_id = message.from_user.id
-    user_data_superuser[user_id]["delete"] = "student"
+    user_data_superuser[user_id]["admin"] = "admin"
     lang = admin[user_data_superuser[user_id]["language"]]
     button = [
-        [types.KeyboardButton(text=f"{lang[2][0]}")],
+        [types.KeyboardButton(text=f"{lang[3][0]}")],
     ]
     keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
-    await message.answer(f"{lang[2][1]}", reply_markup=keyboard)
+    await message.answer(f"{lang[3][1]}", reply_markup=keyboard)
     print(user_data_superuser)
 
+
+
+async def add(message: types.Message):
+    user_id = message.from_user.id
+    lang = admin[user_data_superuser[user_id]["language"]]
+
+    if message.text.isdigit():
+        if len(message.text) == 9:
+            tg_id = int(message.text)
+            result = add_super_admin(tg_id)
+            if result is True:
+                await message.answer(f"{lang[4][2]}")
+            else:
+                await message.answer(f"{lang[4][1]}")
+    else:
+        await message.answer(f"{lang[4][0]}")
+
+
+
+async def find_student(message: types.Message):
+    user_id = message.from_user.id
+    user_data_superuser[user_id]["find_student"] = "find_student"
+    lang = admin[user_data_superuser[user_id]["language"]]
+    button = [
+        [types.KeyboardButton(text=f"{lang[5][0]}")],
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
+    await message.answer(f"{lang[5][1]}", reply_markup=keyboard)
+    print(user_data_superuser)
+
+
+async def one_student(message: types.Message):
+    user_id = message.from_user.id
+    lang = admin[user_data_superuser[user_id]["language"]]
+    text = message.text
+    if text.isdigit() and len(text) >= 9:
+        student = find_user(tg_id=text)
+    elif text.isalpha():
+        student = find_user(fio=text)
+    else:
+        student = find_user(phone=text)
+
+
+    if student:
+        student_info = ""
+        for row in student:
+            student_info += f"{lang[6][-3]} {lang[6][0]} {row[0]}\n{lang[6][1]} {row[1]}\n{lang[6][2]} {row[2]}\n{lang[6][3]} {row[3]}\n{lang[6][4]} {row[4]}"
+
+        button = [[types.KeyboardButton(text=f"{lang[6][-1]}")]]
+        keyboard = types.ReplyKeyboardMarkup(keyboard=button, resize_keyboard=True)
+        await message.answer(student_info, reply_markup=keyboard)
+    else:
+        await message.answer(f"{lang[6][-2]}")
 
 
 # try:
