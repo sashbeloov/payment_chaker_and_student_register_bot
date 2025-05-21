@@ -1,4 +1,4 @@
-﻿language = {"🇺🇿 O'zbekcha","🇺🇸 English","🇷🇺 Русский"}
+language = {"🇺🇿 O'zbekcha","🇺🇸 English","🇷🇺 Русский"}
 buttons = {"✍️ Ro'yhatdan o'tish","✍️ Register","✍️ Регистрация"}
 check = {"✅ Tasdiqlash", "✅ Confirm", "✅ Подтвердить"}
 item = {"nickname":"nickname", "fio":"fio", "phone":"phone"}
@@ -264,25 +264,41 @@ superadmin_back = {"↖️ Bosh menuga qaytish":"↖️ Bosh menuga qaytish", "�
 
 add_admin = {"➕ Yangi admin qoshish", "➕ Add new admin", "➕ Добавить нового админа"}
 
+find_students = {"🔍 Talabani topish", "🔍 Find student", "🔍 Найти студента"}
+
+
 admin = {
     "🇺🇿 O'zbekcha":[
         ["📋 Talabalar ro'yhati", "❌ Guruhdan chiqarish", "🔍 Talabani topish", "➕ Yangi admin qoshish",
          "📅 To'lovi yaqin talabalar", "📊 Statistika", "Quyidagi tugmalardan birini tanlang:"],
         ["↖️ Bosh menuga qaytish","📋 Talabalar ro'yhati", "🆔 Tg_ID:", "👤 FISH:", "📞 Telefon:", "📚 Kurs:", "🕔 Ro'yhatdan o'rgan vaqti:"],
         ["↖️ Bosh menuga qaytish","🤔 Quydigilardan birini kiriting:(tg_id, telefon, fio)\n\n 🆔 Misol-1: 457577100\n\n ✍️ Misol-2: Ismoilov Ismoil Ismoilovich\n\n 📞 Misol-3: +998991234567"],
+        ["↖️ Bosh menuga qaytish", "Yangi adminning telegram idisini kiriting.\n🆔 Misol uchun: 457577100"],
+        ["❌ Xato Iltimos to'g'ri tg_id kiriting,misol uchun: 457577100", "❌ Xatolik:", "✅ Super admin muvaffaqiyatli qo‘shildi."],
+        ["↖️ Bosh menuga qaytish", "🔍 Talabani topish uchun quyidagilardan birini kiriting: (tg_id, telefon, fio)\n\n 🆔 Misol-1: 457577100\n\n ✍️ Misol-2: Ismoilov Ismoil Ismoilovich\n\n 📞 Misol-3: +998991234567"],
+        ["🆔 Tg_ID:", "👤 FISH:", "📞 Telefon:", "📚 Kurs:", "🕔 Ro'yhatdan o'rgan vaqti:", "Ma'lumotlar topildi 🎯\n","🤷‍♂️ Talab topilmadi","↖️ Bosh menuga qaytish"],
     ],
      "🇺🇸 English":[
         ["📋 Student list", "❌ Remove from group", "🔍 Find student", "➕ Add new admin",
          "📅 Students with upcoming payments", "📊 Statistics", "Select one of the following buttons:"],
          ["↖️ Back to main menu","📋 List of Students", "🆔 Tg_ID:", "👤 FN:", "📞 Phone:", "📚 Course:", "🕔 Registereted time:"],
          ["↖️ Return to main menu", "🤔 Enter one of the following: (tg_id, phone number, full name)\n\n 🆔 Example-1: 457577100\n\n ✍️ Example-2: Ismoilov Ismoil Ismoilovich\n\n 📞 Example-3: +998991234567"],
-
+         ["↖️ Return to main menu", "Enter the Telegram ID of the new administrator.\n🆔 For example: 457577100"],
+         ["❌ Error. Please enter a valid tg_id, for example: 457577100", "❌ Error:", "✅ Super admin added successfully."],
+         ["↖️ Return to main menu", "🔍 Enter one of the following to find the student: (tg_id, phone number, full name)\n\n 🆔 Example-1: 457577100\n\n ✍️ Example-2: Ismoilov Ismoil Ismoilovich\n\n 📞 Example-3: +998991234567"],
+         ["🆔 Tg_ID:", "👤 Full Name:", "📞 Phone:", "📚 Course:", "🕔 Registration Time:", "Data found 🎯\n", "🤷‍♂️ Student not found", "↖️ Back to main menu"],
      ],
      "🇷🇺 Русский":[
         ["📋 Список студентов", "❌ Исключить из группы", "🔍 Найти студента", "➕ Добавить нового админа",
          "📅 Студенты с предстоящими платежами", "📊 Статистика", "Выберите одну из следующих кнопок:"],
          ["↖️ Вернуться в главное меню","📋 Список студентов","🆔 Тг_ИД:", "👤 ФИО:", "📞 Телефон:", "📚 Курс:", "🕔 Время регистрации:"],
          ["↖️ Вернуться в главное меню", "🤔 Введите одно из следующих значений: (tg_id, телефон, ФИО)\n\n 🆔 Пример-1: 457577100\n\n ✍️ Пример-2: Исмаилов Исмаил Исмаилович\n\n 📞 Пример-3: +998991234567"],
+         ["↖️ Вернуться в главное меню", "Введите Telegram ID нового администратора.\n🆔 Например: 457577100"],
+         ["❌ Error. Please enter a valid tg_id, for example: 457577100", "❌ Error:", "✅ Super admin added successfully."],
+         ["↖️ Вернуться в главное меню", "🔍 Введите одно из следующих значений, чтобы найти студента: (tg_id, телефон, ФИО)\n\n 🆔 Пример-1: 457577100\n\n ✍️ Пример-2: Исмаилов Исмаил Исмаилович\n\n 📞 Пример-3: +998991234567"],
+         ["🆔 Tg_ID:", "👤 ФИО:", "📞 Телефон:", "📚 Курс:", "🕔 Время регистрации:", "Данные найдены 🎯\n", "🤷‍♂️ Студент не найден", "↖️ Вернуться в главное меню"],
      ]
 }
+
+
 
