@@ -5,6 +5,9 @@ import time
 from aiogram import types
 from data import *
 from db import *
+import pandas as pd
+from io import BytesIO
+from aiogram.types import BufferedInputFile
 
 
 TOKEN = ""
@@ -240,8 +243,6 @@ async def confirm(message: types.Message):
     phone_num = user_data[user_id]["phone"]
     course = user_data[user_id]["course"]
     save_info(user_id,fio,phone_num,course)
-    print(user_id,fio,phone_num,course)
-    print(save_info)
     print(user_data)
 
 
@@ -362,26 +363,75 @@ async def menu_superuser(message: types.Message):
     print(user_data_superuser)
 
 
+# async def student_list_superuser(message: types.Message):
+#     user_id = message.from_user.id
+#     lang = admin[user_data_superuser[user_id]["language"]] # [[]]
+#
+#     def execl_file(info):
+#         column = ["Tg_ID", "FIO", "Phone", "Course", "Created_At"]
+#         df = pd.DataFrame(info, columns=column)
+#         file = df.to_excel("students_info.xlsx", index=False)
+#         print("✅ Excel faylga saqlandi: student_info.xlsx")
+#         return file
+#
+#     students = get_all_students()
+#
+#     button = [
+#         [types.KeyboardButton(text=f"{lang[1][0]}")],
+#     ]
+#     keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
+#     for student in students:  # [()]
+#         total = [] # [1212, fii, phone, course, time]
+#         for i in student:
+#             total.append(str(i) + "\n")
+#         await message.answer(f"{lang[1][1]}\n"
+#                              f"{lang[1][2]} {total[0]}"
+#                              f"{lang[1][3]} {total[1]}"
+#                              f"{lang[1][4]} {total[2]}"
+#                              f"{lang[1][5]} {total[3]}"
+#                              f"{lang[1][6]} {total[4]}", reply_markup=keyboard)
+#     print(user_data_superuser)
+
+
+# Excel faylni xotirada yaratish funksiyasi
+def excel_file(info):
+    import pandas as pd
+    from io import BytesIO
+
+    columns = ["Tg_ID", "FIO", "Phone", "Course", "Created_At"]
+    df = pd.DataFrame(info, columns=columns)
+    buffer = BytesIO()
+    df.to_excel(buffer, index=False, engine='openpyxl')
+    buffer.seek(0)
+    return buffer
+
+
 async def student_list_superuser(message: types.Message):
     user_id = message.from_user.id
-    lang = admin[user_data_superuser[user_id]["language"]] # [[]]
-    students = get_all_students()
+    lang = admin[user_data_superuser[user_id]["language"]]
 
-    button = [
-        [types.KeyboardButton(text=f"{lang[1][0]}")],
-    ]
-    keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
-    for student in students:  # [()]
-        total = [] # [1212, fii, phone, course, time]
-        for i in student:
-            total.append(str(i) + "\n")
-        await message.answer(f"{lang[1][1]}\n"
-                             f"{lang[1][2]} {total[0]}"
-                             f"{lang[1][3]} {total[1]}"
-                             f"{lang[1][4]} {total[2]}"
-                             f"{lang[1][5]} {total[3]}"
-                             f"{lang[1][6]} {total[4]}", reply_markup=keyboard)
-    print(user_data_superuser)
+    try:
+        students = get_all_students()
+
+        if not students:
+            await message.answer(lang[1][-1])
+            return
+
+        excel_buffer = excel_file(students)
+
+        document = BufferedInputFile(
+            file=excel_buffer.read(),  # Muhim: .read() qilish kerak!
+            filename="students_info.xlsx"
+        )
+
+        button = [[types.KeyboardButton(text=f"{lang[1][0]}")]]
+        keyboard = types.ReplyKeyboardMarkup(keyboard=button, resize_keyboard=True)
+
+        await message.answer_document(document=document, caption=lang[1][1], reply_markup=keyboard)
+
+    except Exception as e:
+        print("❌ Xato:", e)
+
 
 
 
@@ -501,3 +551,41 @@ async def main():
 
 
 asyncio.run(main())
+
+
+# from datetime import datetime, timedelta
+# from dateutil.relativedelta import relativedelta
+#
+# # Hozirgi vaqt
+# now = datetime.now()
+#
+# # Bir oydan keyingi shu sana
+# one_month_later = now + relativedelta(months=1)
+#
+# # 3 kun oldingi vaqt
+# three_days_before = one_month_later - timedelta(days=3)
+#
+# # 5 kun oldingi vaqt
+# five_days_before = one_month_later - timedelta(days=5)
+#
+# curr = now.strftime("%Y-%m-%d %H:%M")
+# three = three_days_before.strftime("%Y-%m-%d %H:%M")
+# five =  five_days_before.strftime("%Y-%m-%d %H:%M")
+# next_month = one_month_later.strftime("%Y-%m-%d %H:%M")
+#
+# print("Keyingi oyning shu sanasiga 5 kun qolgan sana:", three)
+# print("Keyingi oyning shu sanasiga 3 kun qolgan sana:",five)
+# print("curr",curr)
+#
+# total = [five,three,next_month]
+# print(total)
+#
+# def check_payment(data):
+#     now2 = datetime.now()
+#     curr2 = now2.strftime("%Y-%m-%d %H:%M")
+#     if curr2 in data:
+#         print(23232)
+#     else:
+#         print("no")
+#
+# check_payment(total)
