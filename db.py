@@ -4,9 +4,9 @@ import psycopg2
 
 def connection():
     conn = psycopg2.connect(
-        dbname="",
+        dbname="student",
         user="postgres",
-        password="",
+        password="23",
         port="5432",
         host="localhost"
     )
@@ -22,7 +22,7 @@ def create_table():
                 fio VARCHAR(100),
                 phone VARCHAR(20),
                 course VARCHAR(100),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         conn.commit()
