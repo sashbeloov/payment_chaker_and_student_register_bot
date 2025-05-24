@@ -1,3 +1,4 @@
+import aioschedule
 from aiogram.filters import Command
 from aiogram import types, Bot, Dispatcher
 import asyncio
@@ -320,78 +321,18 @@ async def payment(message: types.Message):
     print(user_data)
 
 
-@dp.message(lambda message: message.text in ["💳 Plastik karta", "Click", "Payme"])
+@dp.message(lambda message: message.text in ["💳 Plastik karta", "Click", "Payme","💳 Bank card", "Click", "Payme","💳 Банковская карта", "Click", "Payme"])
 async def process_payment_type(message: types.Message):
     user_id = message.from_user.id
+    lang = data[user_data[user_id]["language"]]
     fio = user_data[user_id]["fio"]
     phone = user_data[user_id]["phone"]
     course = user_data[user_id]["course"]
     save_info(user_id, fio, phone, course)
-
-    await message.answer("✅ Ma'lumotlaringiz saqlandi. Rahmat!")
-
-
+    await message.answer(f'{lang[9][0]}')
+    await message.answer(f'{lang[9][1]}')
 
 
-
-# async def daily_payment_check(bot: Bot):
-#     conn = connection()
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT tg_id, fio, payment_date, payment_amount, balance FROM student_info")
-#     rows = cursor.fetchall()
-#     today = datetime.now()
-#
-#     for row in rows:
-#         tg_id, fio, payment_date, amount, balance = row
-#         if not payment_date or balance is None:
-#             print(f"Skipping user {tg_id}: payment_date or balance is None")
-#             continue
-#
-#         next_payment_date = payment_date + timedelta(days=30)
-#         days_left = (next_payment_date - today).days
-#         daily_cost = amount // 30
-#         passed_days = (today - payment_date).days
-#         used_payment = daily_cost * passed_days
-#         updated_balance = max(0, amount - used_payment)
-#
-#         print(f"User {tg_id}: days_left={days_left}, updated_balance={updated_balance}")
-#
-#         cursor.execute(
-#             "UPDATE student_info SET balance = %s WHERE tg_id = %s",
-#             (updated_balance, tg_id)
-#         )
-#         conn.commit()
-#
-#         if days_left in [5, 3]:
-#             await bot.send_message(tg_id, f"📢 {fio}, {days_left} kun ichida to‘lov qilish kerak. Balansingiz: {updated_balance} so'm.")
-#         elif days_left <= 0 and updated_balance <= 0:
-#             await bot.send_message(tg_id, "⛔ To‘lov muddati tugadi va balansingiz yo‘q. Siz guruhdan chiqarildingiz.")
-#             try:
-#                 await bot.ban_chat_member(chat_id=-1002631687688, user_id=tg_id)
-#                 await bot.unban_chat_member(chat_id=-1002631687688, user_id=tg_id)
-#             except Exception as e:
-#                 print(f"Chiqarib bo‘lmadi: {e}")
-#
-#     cursor.close()
-#     conn.close()
-#
-#
-# import aioschedule
-#
-#
-# async def scheduler(bot: Bot):
-#     print('Scheduler is started...')
-#     aioschedule.every().minute.do(daily_payment_check, bot)
-#     while True:
-#         print("Running pending tasks...")
-#         await aioschedule.run_pending()
-#         await asyncio.sleep(60)
-#
-# async def on_startup(dp):
-#     print("Bot startup: Scheduler is being initialized...")
-#     asyncio.create_task(scheduler(bot))
-#
-# asyncio.run(daily_payment_check(bot))
 
 # *************** ////////// ******************* #
 
@@ -473,15 +414,15 @@ async def menu_superuser(message: types.Message):
 
 # Excel faylni xotirada yaratish funksiyasi
 def excel_file(info):
-    import pandas as pd
     from io import BytesIO
 
-    columns = ["Tg_ID", "FIO", "Phone", "Course", "Created_At"]
+    columns = ["tg_id", "fio", "phone", "course", "payment_amount","balance","payment_date","created_at"]
     df = pd.DataFrame(info, columns=columns)
     buffer = BytesIO()
     df.to_excel(buffer, index=False, engine='openpyxl')
     buffer.seek(0)
     return buffer
+
 
 
 async def student_list_superuser(message: types.Message):
@@ -615,17 +556,25 @@ async def one_student(message: types.Message):
 
 
 
+
 async def daily_payment_check(bot: Bot):
     conn = connection()
     cursor = conn.cursor()
+
     cursor.execute("SELECT tg_id, fio, payment_date, payment_amount, balance FROM student_info")
     rows = cursor.fetchall()
-    today = datetime.now()
+    today = datetime.now().date()
 
     for row in rows:
         tg_id, fio, payment_date, amount, balance = row
+
+        # Guruh ID lar odatda -100 bilan boshlanadi, shularni o'tkazib yuboramiz
+        if str(tg_id).startswith('-100'):
+            print(f"Guruh ID aniqlangan ({tg_id}), xabar yuborilmaydi.")
+            continue
+
         if not payment_date or balance is None:
-            print(f"Skipping user {tg_id}: payment_date or balance is None")
+            print(f"Foydalanuvchi {tg_id} o‘tkazib yuborildi: to‘lov sanasi yoki balans yo‘q (None)")
             continue
 
         next_payment_date = payment_date + timedelta(days=30)
@@ -635,7 +584,7 @@ async def daily_payment_check(bot: Bot):
         used_payment = daily_cost * passed_days
         updated_balance = max(0, amount - used_payment)
 
-        print(f"User {tg_id}: days_left={days_left}, updated_balance={updated_balance}")
+        print(f"Foydalanuvchi {tg_id}: qolgan kunlar = {days_left}, yangilangan balans = {updated_balance}")
 
         cursor.execute(
             "UPDATE student_info SET balance = %s WHERE tg_id = %s",
@@ -643,78 +592,62 @@ async def daily_payment_check(bot: Bot):
         )
         conn.commit()
 
-        if days_left in [5, 3]:
-            await bot.send_message(tg_id, f"📢 {fio}, {days_left} kun ichida to‘lov qilish kerak. Balansingiz: {updated_balance} so'm.")
-        elif days_left <= 0 and updated_balance <= 0:
-            await bot.send_message(tg_id, "⛔ To‘lov muddati tugadi va balansingiz yo‘q. Siz guruhdan chiqarildingiz.")
-            try:
-                await bot.ban_chat_member(chat_id=-1002631687688, user_id=tg_id)
-                await bot.unban_chat_member(chat_id=-1002631687688, user_id=tg_id)
-            except Exception as e:
-                print(f"Chiqarib bo‘lmadi: {e}")
+        # Faqat foydalanuvchilarga xabar yuboriladi
+        try:
+            if days_left in [5, 3]:
+                await bot.send_message(
+                    chat_id=tg_id,
+                    text=f"📢 {fio}, {days_left} kun ichida to‘lov qilish kerak. Balansingiz: {updated_balance} so'm."
+                )
+            elif days_left <= 0 and updated_balance <= 0:
+                await bot.send_message(
+                    chat_id=tg_id,
+                    text="⛔️ To‘lov muddati tugadi va balansingiz yo‘q. Siz guruhdan chiqarildingiz."
+                )
+
+                # Guruhdan chiqarish
+                GROUP_ID = -1002631687688
+                await bot.ban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
+                await bot.unban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
+
+                # Bazadan o'chirish
+                cursor.execute("DELETE FROM student_info WHERE tg_id = %s AND balance = 0", (tg_id,))
+                conn.commit()
+                print(f"Foydalanuvchi {tg_id} ma'lumotlar bazasidan o‘chirildi.")
+        except Exception as e:
+            print(f"Xatolik yuz berdi (tg_id={tg_id}): {e}")
 
     cursor.close()
     conn.close()
 
 
-import aioschedule
-
 
 async def scheduler(bot: Bot):
-    print('Scheduler is started...')
-    aioschedule.every().minute.do(daily_payment_check, bot)
+    print('Rejalar boshlandi...')
+
+    def job():
+        asyncio.create_task(daily_payment_check(bot))
+
+    # aioschedule.every().minute.do(job)
+    aioschedule.every().day.at("11:00").do(job)
+
+
     while True:
-        print("Running pending tasks...")
+        print("Navbatdagi vazifalar bajarilmoqda...")
         await aioschedule.run_pending()
         await asyncio.sleep(60)
 
+
 async def on_startup(dp):
-    print("Bot startup: Scheduler is being initialized...")
-    # daily_payment_check ni bir marta ishga tushiramiz
-    await daily_payment_check(bot)
-    # Scheduler ni ishga tushiramiz
+    print("Bot ishga tushmoqda: Rejalar boshlanmoqda...")
     asyncio.create_task(scheduler(bot))
 
+
 async def main():
-    print("Bot is running....")
+    print("Bot ishlamoqda...")
+    await daily_payment_check(bot)
     await dp.start_polling(bot, on_startup=on_startup)
 
-if __name__ == "__main__":
-    asyncio.run(main())
 
-# from datetime import datetime, timedelta
-# from dateutil.relativedelta import relativedelta
-#
-# # Hozirgi vaqt
-# now = datetime.now()
-#
-# # Bir oydan keyingi shu sana
-# one_month_later = now + relativedelta(months=1)
-#
-# # 3 kun oldingi vaqt
-# three_days_before = one_month_later - timedelta(days=3)
-#
-# # 5 kun oldingi vaqt
-# five_days_before = one_month_later - timedelta(days=5)
-#
-# curr = now.strftime("%Y-%m-%d %H:%M")
-# three = three_days_before.strftime("%Y-%m-%d %H:%M")
-# five =  five_days_before.strftime("%Y-%m-%d %H:%M")
-# next_month = one_month_later.strftime("%Y-%m-%d %H:%M")
-#
-# print("Keyingi oyning shu sanasiga 5 kun qolgan sana:", three)
-# print("Keyingi oyning shu sanasiga 3 kun qolgan sana:",five)
-# print("curr",curr)
-#
-# total = [five,three,next_month]
-# print(total)
-#
-# def check_payment(data):
-#     now2 = datetime.now()
-#     curr2 = now2.strftime("%Y-%m-%d %H:%M")
-#     if curr2 in data:
-#         print(23232)
-#     else:
-#         print("no")
-#
-# check_payment(total)
+asyncio.run(main())
+
