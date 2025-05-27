@@ -33,8 +33,8 @@ data = {
           "FIO:",
           "phone:",
           "Course: Buxgalteriya",
-          "Telefon raqam +998 bilan boshlanishi kerak!",
           "Telefon raqam uzunligi 13 ta simvoldan iborat bo'lishi kerak!",
+          "Telefon raqam +998 bilan boshlanishi kerak!",
           "Telefon raqam faqat + va sonlardan tashkil topishi kerak misol uchum:\n +998991234567"
         ],
         ["💵 To'lov", "↖️ Bosh menuga qaytish", "✅ Malumotlar muvaffaqiyatli tasdiqlandi","💵 To'lovga o'tish"],
@@ -83,6 +83,7 @@ data = {
          "✅ Universal hisobotlar;\n",
          ],
         ["💳 Plastik karta", "Click", "Payme", "↖️ Bosh menuga qaytish", "To'lov turini tanlang"],
+        ["✅ Ma'lumotlaringiz saqlandi. Rahmat!",'Asosiy guruhga qoshilish uchun havola:\n https://t.me/+SA4eEV_8vgc3ZmZi']
     ],
 
     "🇺🇸 English": [
@@ -106,9 +107,9 @@ data = {
           "Full Name:",
           "Phone:",
           "Course: Accounting",
-          "Phone number must start with +998!",
           "Phone number must be 13 characters long!",
-          "Phone number must contain only + and digits. For example:\n +998991234567"
+            "Phone number must start with +998!",
+          "Phone number must contain only + and digits. \nFor example: +998991234567"
         ],
         ["💵 Payment", "↖️ Return to main menu", "✅ Information confirmed successefully","💵 Go to payment"],
         ["📍 Location", "↖️ Return to the main menu",
@@ -156,6 +157,7 @@ data = {
          "✅ Universal reports;\n",
         ],
         ["💳 Bank card", "Click", "Payme", "↖️ Back to main menu", "Choose payment method"],
+        ["✅ Your information has been saved. Thank you!", "Main link to join the group:\nhttps://t.me/+SA4eEV_8vgc3ZmZi"],
 
     ],
 
@@ -180,9 +182,9 @@ data = {
           "ФИО:",
           "Телефон:",
           "Курс: Бухгалтерия",
-          "Номер телефона должен начинаться с +998!",
           "Номер телефона должен состоять из 13 символов!",
-          "Номер телефона должен содержать только + и цифры. Например:\n +998991234567"
+            "Номер телефона должен начинаться с +998!",
+          "Номер телефона должен содержать только + и цифры. \nНапример: +998991234567"
         ],
         ["💵 Оплата", "↖️ Вернуться в главное меню", "✅ Данные успешно потверждень", "💵 Перейти к оплате"],
         ["📍 Локация", "↖️ Вернуться в главное меню",
@@ -230,6 +232,7 @@ data = {
          "✅ Универсальные отчёты;\n",
         ],
         ["💳 Банковская карта", "Click", "Payme", "↖️ Вернуться в главное меню", "Выберите способ оплаты"],
+        ["✅ Ваши данные сохранены. Спасибо!","Основная ссылка для присоединения к группе:\nhttps://t.me/+SA4eEV_8vgc3ZmZi"]
     ],
 }
 
