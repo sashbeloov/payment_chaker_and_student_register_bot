@@ -12,12 +12,15 @@ from aiogram.types import BufferedInputFile
 from datetime import datetime, timedelta
 from aiogram import Bot
 import asyncio
+from aiogram.types import LabeledPrice
 
 
 # ChannelName = "@test-sashabelov" 8004593517
 # await bot.send_message(ChannelName, message_text)   # Kanalga xabar jonatish
 
-TOKEN = ""
+TOKEN = "8064181454:AAFvu_9DePDklMhQjvAw83aD5E4K9EU9cBU"
+CLICK_PROVIDER_TOKEN = '398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065'
+PAYME_PROVIDER_TOKEN = '371317599:TEST:1747468505837'
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -162,28 +165,40 @@ async def register(message: types.Message):
 async def full_fio(message: types.Message):
     try:
         user_id = message.from_user.id
-        lang = data[user_data[user_id]["language"]]  # [[]]
-        user_data[user_id]["state"] = "check_course"
-        ok = True
+        lang = data[user_data[user_id]["language"]]
         matn = message.text
-        text = message.text.split()
-        for i in text:
-            for j in i:
-                if not j.isalpha():
-                    await message.answer(f"{lang[2][-1]}")
+        text = matn.split()
+
+        # Fayzulla Qobilov kabi 2 yoki 3 ta so‘zdan iborat bo‘lishi kutilmoqda
+        ok = True
+        for word in text:
+            for char in word:
+                if not (char.isalpha() or char in ["'", "‘", "’"]):  # faqat harflar va `'` belgilariga ruxsat
                     ok = False
                     break
+            if not ok:
+                break
 
-        if ok:
-            user_data[user_id]["fio"] = matn
-            button = [
-                [types.KeyboardButton(text=f"{lang[2][0]}", request_contact=True), types.KeyboardButton(text=f"{lang[2][1]}")],
+        if not ok:
+            await message.answer(f"{lang[2][-1]}")  # noto'g'ri kiritilgan FIO haqida ogohlantirish
+            return
+
+        # Agar hammasi yaxshi bo‘lsa
+        user_data[user_id]["fio"] = matn
+        user_data[user_id]["state"] = "check_course"
+
+        button = [
+            [
+                types.KeyboardButton(text=f"{lang[2][0]}", request_contact=True),
+                types.KeyboardButton(text=f"{lang[2][1]}")
             ]
-            keyboard = types.ReplyKeyboardMarkup(keyboard=button, resize_keyboard=True)
-            await message.answer(f"{lang[2][2]}", reply_markup=keyboard)
-            user_data[user_id]["fio"] = matn
+        ]
+        keyboard = types.ReplyKeyboardMarkup(keyboard=button, resize_keyboard=True)
+        await message.answer(f"{lang[2][2]}", reply_markup=keyboard)
+
     except Exception as e:
-        await message.answer(f"Unexpected error! Something went wrong.{e}")
+        await message.answer(f"Unexpected error! Something went wrong. {e}")
+
     print(user_data)
 
 
@@ -199,6 +214,7 @@ async def check_phone(message: types.Message):
         fio = user_data[user_id]["fio"]
         course = lang[3][5]
         user_data[user_id]["course"] = course
+        print("hello")
         if message.contact is not None:
             phone_c = message.contact.phone_number
             user_data[user_id]['phone'] = phone_c
@@ -207,8 +223,8 @@ async def check_phone(message: types.Message):
             ]
             keyboard = types.ReplyKeyboardMarkup(keyboard=button, resize_keyboard=True)
             await message.answer(f"{lang[3][2]}\n"
-                                 f"👤 {lang[3][3]}: {fio}\n"
-                                 f"📞 {lang[3][4]}: {phone_c}\n"
+                                 f"👤 {lang[3][3]} {fio}\n"
+                                 f"📞 {lang[3][4]} {phone_c}\n"
                                  f"📚 {lang[3][5]}", reply_markup=keyboard)
         else:
             if len(phone_num) == 13:
@@ -229,9 +245,11 @@ async def check_phone(message: types.Message):
                                              f"📞 {lang[3][4]} {phone_num}\n"
                                              f"📚 {lang[3][5]}", reply_markup=keyboard)
                 else:
-                    await message.answer(f"{lang[2][-2]}")
+                    print(22)
+                    await message.answer(f"{lang[3][-2]}")
             else:
-                await message.answer(f"{lang[2][-3]}")
+                print(23)
+                await message.answer(f"{lang[3][-1]}")
 
     except Exception as e:
         await message.answer(f"Unexpected error! Something went wrong.{e}")
@@ -325,12 +343,43 @@ async def payment(message: types.Message):
 async def process_payment_type(message: types.Message):
     user_id = message.from_user.id
     lang = data[user_data[user_id]["language"]]
+    await bot.send_invoice(
+        chat_id=message.chat.id,
+        title="Kurs uchun to'lov",
+        description="Kurs uchun to'lov",
+        payload="k_001",
+        provider_token=CLICK_PROVIDER_TOKEN,
+        currency="UZS",
+        prices=[LabeledPrice(label="1 dona non", amount=1200000 * 100)],  # 10,000 so'm
+        start_parameter="time-machine-example",
+        need_name=False,
+        need_phone_number=True,
+        need_email=False,
+        is_flexible=False
+    )
     fio = user_data[user_id]["fio"]
     phone = user_data[user_id]["phone"]
     course = user_data[user_id]["course"]
     save_info(user_id, fio, phone, course)
-    await message.answer(f'{lang[9][0]}')
-    await message.answer(f'{lang[9][1]}')
+    # await message.answer(f'{lang[9][0]}')
+    # await message.answer(f'{lang[9][1]}')
+
+
+@dp.pre_checkout_query(lambda query: True)
+async def pre_checkout_query_handler(pre_checkout_query: types.PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+from aiogram import F
+from aiogram.types import Message, SuccessfulPayment
+
+@dp.message(F.successful_payment)
+async def successful_payment_handler(message: Message):
+    user_id = message.from_user.id
+    amount = message.successful_payment.total_amount // 100
+    currency = message.successful_payment.currency
+
+    await message.answer(f"✅ To‘lov muvaffaqiyatli bajarildi! {amount} {currency} uchun rahmat 🙌")
+
 
 
 
@@ -382,34 +431,7 @@ async def menu_superuser(message: types.Message):
     print(user_data_superuser)
 
 
-# async def student_list_superuser(message: types.Message):
-#     user_id = message.from_user.id
-#     lang = admin[user_data_superuser[user_id]["language"]] # [[]]
-#
-#     def execl_file(info):
-#         column = ["Tg_ID", "FIO", "Phone", "Course", "Created_At"]
-#         df = pd.DataFrame(info, columns=column)
-#         file = df.to_excel("students_info.xlsx", index=False)
-#         print("✅ Excel faylga saqlandi: student_info.xlsx")
-#         return file
-#
-#     students = get_all_students()
-#
-#     button = [
-#         [types.KeyboardButton(text=f"{lang[1][0]}")],
-#     ]
-#     keyboard = types.ReplyKeyboardMarkup(keyboard=button,resize_keyboard=True)
-#     for student in students:  # [()]
-#         total = [] # [1212, fii, phone, course, time]
-#         for i in student:
-#             total.append(str(i) + "\n")
-#         await message.answer(f"{lang[1][1]}\n"
-#                              f"{lang[1][2]} {total[0]}"
-#                              f"{lang[1][3]} {total[1]}"
-#                              f"{lang[1][4]} {total[2]}"
-#                              f"{lang[1][5]} {total[3]}"
-#                              f"{lang[1][6]} {total[4]}", reply_markup=keyboard)
-#     print(user_data_superuser)
+
 
 
 # Excel faylni xotirada yaratish funksiyasi
@@ -449,7 +471,7 @@ async def student_list_superuser(message: types.Message):
         await message.answer_document(document=document, caption=lang[1][1], reply_markup=keyboard)
 
     except Exception as e:
-        print("❌ Xato:", e)
+        print(f"{lang[1][-1]}", e)
 
 
 
@@ -557,96 +579,96 @@ async def one_student(message: types.Message):
 
 
 
-async def daily_payment_check(bot: Bot):
-    conn = connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT tg_id, fio, payment_date, payment_amount, balance FROM student_info")
-    rows = cursor.fetchall()
-    today = datetime.now().date()
-
-    for row in rows:
-        tg_id, fio, payment_date, amount, balance = row
-
-        # Guruh ID lar odatda -100 bilan boshlanadi, shularni o'tkazib yuboramiz
-        if str(tg_id).startswith('-100'):
-            print(f"Guruh ID aniqlangan ({tg_id}), xabar yuborilmaydi.")
-            continue
-
-        if not payment_date or balance is None:
-            print(f"Foydalanuvchi {tg_id} o‘tkazib yuborildi: to‘lov sanasi yoki balans yo‘q (None)")
-            continue
-
-        next_payment_date = payment_date + timedelta(days=30)
-        days_left = (next_payment_date - today).days
-        daily_cost = amount // 30
-        passed_days = (today - payment_date).days
-        used_payment = daily_cost * passed_days
-        updated_balance = max(0, amount - used_payment)
-
-        print(f"Foydalanuvchi {tg_id}: qolgan kunlar = {days_left}, yangilangan balans = {updated_balance}")
-
-        cursor.execute(
-            "UPDATE student_info SET balance = %s WHERE tg_id = %s",
-            (updated_balance, tg_id)
-        )
-        conn.commit()
-
-        # Faqat foydalanuvchilarga xabar yuboriladi
-        try:
-            if days_left in [5, 3]:
-                await bot.send_message(
-                    chat_id=tg_id,
-                    text=f"📢 {fio}, {days_left} kun ichida to‘lov qilish kerak. Balansingiz: {updated_balance} so'm."
-                )
-            elif days_left <= 0 and updated_balance <= 0:
-                await bot.send_message(
-                    chat_id=tg_id,
-                    text="⛔️ To‘lov muddati tugadi va balansingiz yo‘q. Siz guruhdan chiqarildingiz."
-                )
-
-                # Guruhdan chiqarish
-                GROUP_ID = -1002631687688
-                await bot.ban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
-                await bot.unban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
-
-                # Bazadan o'chirish
-                cursor.execute("DELETE FROM student_info WHERE tg_id = %s AND balance = 0", (tg_id,))
-                conn.commit()
-                print(f"Foydalanuvchi {tg_id} ma'lumotlar bazasidan o‘chirildi.")
-        except Exception as e:
-            print(f"Xatolik yuz berdi (tg_id={tg_id}): {e}")
-
-    cursor.close()
-    conn.close()
-
-
-
-async def scheduler(bot: Bot):
-    print('Rejalar boshlandi...')
-
-    def job():
-        asyncio.create_task(daily_payment_check(bot))
-
-    # aioschedule.every().minute.do(job)
-    aioschedule.every().day.at("11:00").do(job)
-
-
-    while True:
-        print("Navbatdagi vazifalar bajarilmoqda...")
-        await aioschedule.run_pending()
-        await asyncio.sleep(60)
-
-
-async def on_startup(dp):
-    print("Bot ishga tushmoqda: Rejalar boshlanmoqda...")
-    asyncio.create_task(scheduler(bot))
+# async def daily_payment_check(bot: Bot):
+#     conn = connection()
+#     cursor = conn.cursor()
+#
+#     cursor.execute("SELECT tg_id, fio, payment_date, payment_amount, balance FROM student_info")
+#     rows = cursor.fetchall()
+#     today = datetime.now().date()
+#
+#     for row in rows:
+#         tg_id, fio, payment_date, amount, balance = row
+#
+#         # Guruh ID lar odatda -100 bilan boshlanadi, shularni o'tkazib yuboramiz
+#         if str(tg_id).startswith('-100'):
+#             print(f"Guruh ID aniqlangan ({tg_id}), xabar yuborilmaydi.")
+#             continue
+#
+#         if not payment_date or balance is None:
+#             print(f"Foydalanuvchi {tg_id} o‘tkazib yuborildi: to‘lov sanasi yoki balans yo‘q (None)")
+#             continue
+#
+#         next_payment_date = payment_date + timedelta(days=30)
+#         days_left = (next_payment_date - today).days
+#         daily_cost = amount // 30
+#         passed_days = (today - payment_date).days
+#         used_payment = daily_cost * passed_days
+#         updated_balance = max(0, amount - used_payment)
+#
+#         print(f"Foydalanuvchi {tg_id}: qolgan kunlar = {days_left}, yangilangan balans = {updated_balance}")
+#
+#         cursor.execute(
+#             "UPDATE student_info SET balance = %s WHERE tg_id = %s",
+#             (updated_balance, tg_id)
+#         )
+#         conn.commit()
+#
+#         # Faqat foydalanuvchilarga xabar yuboriladi
+#         try:
+#             if days_left in [5, 3]:
+#                 await bot.send_message(
+#                     chat_id=tg_id,
+#                     text=f"📢 {fio}, {days_left} kun ichida to‘lov qilish kerak. Balansingiz: {updated_balance} so'm."
+#                 )
+#             elif days_left <= 0 and updated_balance <= 0:
+#                 await bot.send_message(
+#                     chat_id=tg_id,
+#                     text="⛔️ To‘lov muddati tugadi va balansingiz yo‘q. Siz guruhdan chiqarildingiz."
+#                 )
+#
+#                 # Guruhdan chiqarish
+#                 GROUP_ID = -1002631687688
+#                 await bot.ban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
+#                 await bot.unban_chat_member(chat_id=GROUP_ID, user_id=tg_id)
+#
+#                 # Bazadan o'chirish
+#                 cursor.execute("DELETE FROM student_info WHERE tg_id = %s AND balance = 0", (tg_id,))
+#                 conn.commit()
+#                 print(f"Foydalanuvchi {tg_id} ma'lumotlar bazasidan o‘chirildi.")
+#         except Exception as e:
+#             print(f"Xatolik yuz berdi (tg_id={tg_id}): {e}")
+#
+#     cursor.close()
+#     conn.close()
+#
+#
+#
+# async def scheduler(bot: Bot):
+#     print('Rejalar boshlandi...')
+#
+#     def job():
+#         asyncio.create_task(daily_payment_check(bot))
+#
+#     # aioschedule.every().minute.do(job)
+#     aioschedule.every().day.at("11:00").do(job)
+#
+#
+#     while True:
+#         print("Navbatdagi vazifalar bajarilmoqda...")
+#         await aioschedule.run_pending()
+#         await asyncio.sleep(60)
+#
+#
+# async def on_startup(dp):
+#     print("Bot ishga tushmoqda: Rejalar boshlanmoqda...")
+#     asyncio.create_task(scheduler(bot))
 
 
 async def main():
     print("Bot ishlamoqda...")
-    await daily_payment_check(bot)
-    await dp.start_polling(bot, on_startup=on_startup)
+    # await daily_payment_check(bot)
+    await dp.start_polling(bot)
 
 
 asyncio.run(main())
