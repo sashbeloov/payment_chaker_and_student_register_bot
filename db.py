@@ -22,13 +22,17 @@ def create_table():
                 fio VARCHAR(100),
                 phone VARCHAR(20),
                 course VARCHAR(100),
-                created_at TIMESTAMP(0) DEFAULT CURRENT_TIMESTAMP
+                payment_amount NUMERIC DEFAULT 1200000,
+                balance NUMERIC DEFAULT 1200000,
+                payment_date DATE DEFAULT CURRENT_DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         conn.commit()
         return cursor, conn
     except Exception as e:
         return f"Xato: {e}"
+
 
 def save_info(tg_id, fio, phone, course):
     cursor, conn = create_table()
