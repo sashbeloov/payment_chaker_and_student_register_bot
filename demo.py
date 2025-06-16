@@ -15,7 +15,6 @@ import asyncio
 from aiogram.types import LabeledPrice
 
 
-# ChannelName = "@test-sashabelov" 8004593517
 # await bot.send_message(ChannelName, message_text)   # Kanalga xabar jonatish
 
 TOKEN = "8064181454:AAFvu_9DePDklMhQjvAw83aD5E4K9EU9cBU"
@@ -27,7 +26,7 @@ dp = Dispatcher()
 
 user_data = {}
 user_data_superuser = {}
-super_users = [921347523]
+super_users = []
 
 
 
